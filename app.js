@@ -17,6 +17,8 @@ app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const CartItem = require('./models/cart-item');
+const Cart = require('./models/cart');
 
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -37,9 +39,17 @@ app.use(errorController.get404);
 Product.belongsTo(User,{constraints :true,onDelete :"CASCADE"});
 User.hasMany(Product);
 
+User.hasOne(Cart);
+Cart.belongsTo(User);
+
+Cart.belongsToMany(Product,{through:CartItem});
+Product.belongsToMany(Cart,{through:CartItem});
+
+
+
 sequelize
-.sync()
-//.sync({force:true})
+//.sync()
+.sync({force:true})
 .then((result)=>{
     return User.findByPk(1)
    
@@ -51,7 +61,9 @@ sequelize
     }
     return user;
 }).then(user=>{
-    console.log(user);
+    
+   return user.createCart()
+}).then(cart =>{
     app.listen(3000);
 })
 .catch(e=>{
